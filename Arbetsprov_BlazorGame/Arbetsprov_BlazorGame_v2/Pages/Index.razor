@@ -1,0 +1,169 @@
+﻿@page "/"
+@using System.Linq
+@using Arbetsprov_BlazorGame_v2.Model
+
+<DisplayHeading Size="DisplayHeadingSize.Is1">Välkommen till 4-Kamp!</DisplayHeading>
+<h3>Lägg till spelare</h3>
+<input type="text" @bind="playerName" />
+<button @onclick="AddPlayer" class="btn btn-primary btn-lg">Lägg till spelare</button>
+<h3>Lägg till gren</h3>
+<input type="test" @bind="newEventName" />
+<button @onclick="AddEvent" class="btn btn-primary btn-lg">Lägg till gren</button>
+
+@if (Game.Players.Any())
+{
+    <h4>Spelare:</h4>
+    <ul>
+        @foreach (var player in Game.Players)
+        {
+            <li>@player.Name - Totalpoäng: @player.TotalScore</li>
+            <div>
+                <span>@player.Name</span>
+                <button @onclick="() => RemovePlayer(player.Name)" class="btn btn-secondary btn-sm">Ta bort</button>
+            </div>
+        }
+    </ul>
+}
+else
+{
+    <p>Inga spelare</p>
+}
+
+@if (Game.Events.Any())
+{
+    <h4>Grenar:</h4>
+    <ul>
+        @foreach (var e in Game.Events)
+        {
+            <li>@e.Name</li>
+            <div>
+                <button @onclick="() => RemoveEvent(e)" class="btn btn-secondary btn-sm">Ta bort</button>
+            </div>
+        }
+
+    </ul>
+}
+else
+{
+    <p>Inga grenar</p>
+}
+
+@if (Game.Events.Any())
+{
+    <h4>Poängställning:</h4>
+    <ul>
+        @foreach (var e in Game.Events)
+        {
+            <li>@e.Name</li>
+            <ul>
+                @foreach (var player in Game.Players)
+                {
+                    var playerName = player.Name;
+                    <li>
+                        @player.Name: @Game.GetScore(player, e.Name)
+                        <button @onclick="(() => Game.AddScore(player, e.Name))">+1</button>
+                    </li>
+                }
+            </ul>
+        }
+    </ul>
+}
+
+
+
+@code {
+    private Game Game { get; set; }
+    private string playerName;
+    private string newEventName;
+
+    private void AddPlayer()
+    {
+        if (!string.IsNullOrWhiteSpace(playerName))
+        {
+            Game.AddPlayer(playerName);
+            playerName = string.Empty;
+
+        }
+
+    }
+
+    private Game game;
+
+    protected override void OnInitialized()
+    {
+        Game = new Game();
+    }
+
+    private void RemovePlayer(string playerName)
+    {
+        var player = Game.Players.FirstOrDefault(p => p.Name == playerName);
+        if (player != null)
+        {
+            Game.RemovePlayer(player);
+        }
+    }
+
+    private string newEventGame;
+
+    private void AddEvent()
+    {
+        if (!string.IsNullOrWhiteSpace(newEventName))
+        {
+            Game.AddEvent(newEventName);
+            newEventName = string.Empty;
+        }
+    }
+
+    private void RemoveEvent(Event evnt)
+    {
+        Game.RemoveEvent(evnt);
+    }
+
+    private void EndGame()
+    {
+        Game.IsGameFinished = true;
+    }
+
+    private void ResetGame()
+    {
+        Game = new Game();
+    }
+}
+
+
+
+
+@if (Game.IsGameFinished)
+{
+    <h4>Vinnare:</h4>
+        <ul class="no-bullets"> 
+        @foreach (var winner in Game.GetWinners())
+        {
+            <li>@winner.Name - Totalpoäng: @winner.TotalScore</li>
+        }
+        </ul>
+        @if (Game.GetSecondPlace() != null)
+        {
+        <h4>Andra plats:</h4>
+        <p>@Game.GetSecondPlace().Name - Totalpoäng: @Game.GetSecondPlace().TotalScore</p>
+        }
+        @if (Game.GetThirdPlace() != null)
+        {
+        <h4>Tredje plats:</h4>
+        <p>@Game.GetThirdPlace().Name - Totalpoäng: @Game.GetThirdPlace().TotalScore</p>
+        }
+    
+        <button @onclick="ResetGame" class="btn btn-outline-success btn-lg">Starta om spelet</button>
+}
+else
+{
+    <button @onclick="EndGame" class="btn btn-info btn-lg">Avsluta spelet</button>
+}
+
+<style>
+    .no-bullets {
+        list-style-type: none;
+        padding: 0;
+        margin: 0;
+    }
+</style>
